@@ -3,9 +3,6 @@
 Created on Mon Aug 21 
 
 @author: brian
-09-18-17 add CED0201 and PIA0201 O to M
-09-19-17 modified batch script to commit dicts and schemas to svn
-09-19-17 correct to handle V4 files.  parse is ok, write is id[1,5] not id[1,4]
 """
 
 import os
@@ -28,23 +25,23 @@ logzero.logfile("edifact.log", maxBytes=1e6, backupCount=3)
 def loadelists():
 
     '''
-    'Name="6066 Control Value"',
-    'Name="6064 Quantity Difference"',
-    'Name="5420 Rate Per Unit"',
-    'Name="6174 Size"',
-    'Name="6348 Currency Rate Base"',
-    'Name="5278 Duty/Tax/Fee Rate"',
-    'Name="5004 Monetary Amount"',
-    'Name="5118 Price"',
-    'Name="5394 Price Multiplier"',
-    'Name="6060 Quantity"',
-    'Name="6314 Measure"',
-    'Name="6152 Range Maximum"',
-    'Name="6162 Range Minimum"',
-    'Name="5402 Rate Of Exchange"',
-    'Name="6246 Temperature Setting"',
-    'Name="5160 Total Monetary Amount"',
-    'Name="7240 Total Number Of Items"']
+    nlist = ['Name="6066 Control Value"',
+            'Name="6064 Quantity Difference"',
+            'Name="5420 Rate Per Unit"',
+            'Name="6174 Size"',
+            'Name="6348 Currency Rate Base"',
+            'Name="5278 Duty/Tax/Fee Rate"',
+            'Name="5004 Monetary Amount"',
+            'Name="5118 Price"',
+            'Name="5394 Price Multiplier"',
+            'Name="6060 Quantity"',
+            'Name="6314 Measure"',
+            'Name="6152 Range Maximum"',
+            'Name="6162 Range Minimum"',
+            'Name="5402 Rate Of Exchange"',
+            'Name="6246 Temperature Setting"',
+            'Name="5160 Total Monetary Amount"',
+            'Name="7240 Total Number Of Items"']
     '''
     elist = ["6066","6064","5420","6174","6348","5278","5004","5118","5394","6060","6314","6152","6162","5402","6246",
         "5160","7240"]
@@ -85,8 +82,8 @@ def prpy(basedir):
                 # then go and change them in a 2nd pass
                 change_list=[]
                 change_elist=[]
-                change_ced_list=[]
-                change_pia_list=[]
+                
+                   
                 # loop through the lines, set flag for segment markers
                 linenum=0
                 for line in dicfile:
@@ -111,19 +108,8 @@ def prpy(basedir):
                         if dict_element in elist:
                             change_elist.append(linenum-1)
 
-                    # if CED segment, CED02 is a M composite, CED0201 change "O" to "M"
-                    if '<Segment ID="CED"' in line:
-                        # lno-1 is current line where the SEG marker was found
-                        # lno+3 is the line to change
-                        #print("marker ",linenum)
-                        change_ced_list.append(linenum+2)
-                        
-                    # if PIA segment, PIA02 is a M composite, PIA0201 change "O" to "M"
-                    if '<Segment ID="PIA"' in line:
-                        # lno-1 is current line where the SEG marker was found
-                        # lno+3 is the line to change
-                        #print("marker ",linenum)
-                        change_pia_list.append(linenum+2)
+
+
 
 
                 # change all of the SG lines to make the next line mandatory
@@ -131,26 +117,15 @@ def prpy(basedir):
                     #print(linenum)
                     dicfile[linenum] = dicfile[linenum].replace('Req="O"', 'Req="M"')
                     #print(dicfile[linenum])
-                # change fields to real numeric
                 for linenum in change_elist:
                     dicfile[linenum] = dicfile[linenum].replace('Type="N"', 'Type="R"')                                        
                     dicfile[linenum] = dicfile[linenum].replace('Type="AN"', 'Type="R"')                                        
-                # change all CED0201 to mandatory
-                for linenum in change_ced_list:
-                    #print(linenum)
-                    dicfile[linenum] = dicfile[linenum].replace('Req="O"', 'Req="M"')
-                    #linenum = linenum +1
-                    #dicfile[linenum] = dicfile[linenum].replace('Req="M"', 'Req="O"')
-                    #print(dicfile[linenum])
-                # change all PIA0201 to mandatory
-                for linenum in change_pia_list:
-                    #print(linenum)
-                    dicfile[linenum] = dicfile[linenum].replace('Req="O"', 'Req="M"')
-                    #linenum = linenum +1
-                    #dicfile[linenum] = dicfile[linenum].replace('Req="M"', 'Req="O"')
-                    #print(dicfile[linenum])
-                    
-                # write the changed file back
+
+
+
+                                     
+
+
                 put_lines(full_file_name_with_path,dicfile)
 
                 #exit(0)
@@ -170,6 +145,8 @@ def get_lines(full_file_name_with_path):
 def put_lines(full_file_name_with_path, dicfile):
     with open(full_file_name_with_path, mode='w') as f:
         f.writelines(dicfile)
+        
+                            
 
 
 def main():     
@@ -177,7 +154,7 @@ def main():
     std=sys.argv[1]
     #stdu="EDIFACT_D16A"
     stdu=std.upper()
-    logger.info("\n\nThis is the standard passed in "+ stdu+"\n\n")
+    print("\n\nThis is the standard passed in "+ stdu+"\n\n")
     #prpy(r'c:\SVN\iway8\svn\iway8schemas\trunk\ebix\edifact\EDIFACT_D13A\src\main\resources\1.0\D13A\dictionaries')
     #prpy(r'c:\SVN\iway8\svn\iway8schemas\trunk\ebix\edifact\EDIFACT_D16A')
     #full_path=r'c:\SVN\iway8\svn\iway8schemas\trunk\ebix\edifact\EDIFACT_D16A'
@@ -186,38 +163,14 @@ def main():
     logger.info(full_path)
     if os.path.exists(full_path) == False:
         logger.info("Bad directory path")
+    #quit()
+    
+    #prpy(r'c:\SVN\iway8\svn\iway8schemas\trunk\ebix\edifact\'+standard)
     prpy(full_path)
-
-    logger.info("getting run_edifact.bat from project directory")
-    with open("run_edifact.bat") as f2:
-        dosfile = f2.read()
-    # edifact version is right 4 characters  i.e. D16A
-    #thever=stdu[-4:]
-    thever=stdu[8:15]
-    #thever=string(stdu.rsplit("_"))
-    print(thever)
-    # replace all the tokens in the file - no need to loop through it
-    dosfile = dosfile.replace("%%TOKEN%%",thever)                
-    #print(dosfile)
+    '''
+    remove EDIFACT_D13A IN ABOVE LINE TO PRODUCTION RUN
+    '''
     
-    #put dosfile by writing all lines
-    logger.info("putting run_edifact_schemas.bat into this directory")
 
-    #C:\SVN\iway8\svn\iway8schemas\trunk\ebix\edifact\EDIFACT_D08B\src\main\resources\1.0\D08B
-    full_path=r'c://SVN//iway8//svn//iway8schemas//trunk//ebix//edifact//'+stdu+'//src//main//resources//1.0//'+thever+'//run_edifact_schemas.bat'
-    
-    logger.info(full_path)
-
-    with open(full_path, mode='w') as f3:
-    #    f3.writelines(dosfile)
-        f3.write(dosfile)
-
-    ## run the batch file - os.popen is used so the console output can be scraped and sent to the log.
-    #os.system(full_path)
-    result=os.popen(full_path)
-    outdata=result.read()
-    logger.info(outdata)
-    logger.info("run_edifact_schemas completed")
-    
 if __name__ == '__main__':
     main()
